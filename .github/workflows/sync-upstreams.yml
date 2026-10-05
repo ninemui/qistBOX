@@ -1,0 +1,29 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Runs every day at 06:00 UTC
+  workflow_dispatch:       # Allows manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and sync
+        run: |
+          git remote add upstream https://github.com/qist/tvbox.git || true
+          git fetch upstream
+          git checkout main || git checkout master
+          git merge upstream/main --no-edit || git merge upstream/master --no-edit || echo "Already up to date or conflict"
+          git push origin HEAD
